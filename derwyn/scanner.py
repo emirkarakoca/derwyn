@@ -4,32 +4,20 @@ import zipfile as z
 import sqlite3
 import json
 
-#geçici yollar
-rom_dir = Path("/home/emir/Projeler/storage/Roms/")
-db_path = Path("/home/emir/Projeler/qt-project/data/libretrodb/libretrodb.sqlite")
-systems_dir = Path("/home/emir/Projeler/qt-project/data/systems.json")
-games_path = Path("/home/emir/Projeler/qt-project/data/games.json")
-cache_path = Path("/home/emir/Projeler/qt-project/cache/games_cache.json")
+from derwyn.utils import config 
 
+rom_dir = Path(config.load_paths()["roms_dir"])
+systems = config.load_systems()
+old_cache = config.load_cache()
 
 archive_list = {
     ".zip"
 }
 
-def load_json(path):
-    try:
-        with path.open("r", encoding="utf-8") as file:
-            return json.load(file)
-    except:
-        return {}
-
-systems = load_json(systems_dir)
 valid_extensions = set()
 for system, system_data in systems.items():
     for extension in system_data.get("extensions", []):
         valid_extensions.add(extension.lower())
-
-old_cache = load_json(cache_path)
 
 def calculate_md5(file_object, chunk_size=1024 * 1024): #dosya büyüklüğüne göre chunk ayarlanacak
     md5 = hashlib.md5()
@@ -93,7 +81,7 @@ def load_database():
 
     """
 
-    with sqlite3.connect(db_path) as db:
+    with sqlite3.connect(config.db_path) as db:
         db.row_factory = sqlite3.Row
         rows = db.execute(query).fetchall()
         database = {row["md5"]: dict(row) for row in rows}
@@ -223,11 +211,11 @@ def scan_roms():
 
             print("bulundu:", game["display_name"])
 
-    with games_path.open("w", encoding="utf-8") as file:
-        json.dump(games, file, ensure_ascii=False, indent=4)
+    if not config.save_games(games):
+        print("games.json yazılamadı")
     
-    with cache_path.open("w", encoding="utf-8") as file:
-        json.dump(old_cache, file, ensure_ascii=False, indent=4)
+    if not config.save_cache(old_cache):
+        print("games_cache.json yazılamadı")
 
 if __name__ == "__main__":
     scan_roms()
