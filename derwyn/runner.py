@@ -1,51 +1,60 @@
-import json
 import subprocess
-from pathlib import Path
+
+from derwyn.utils import config
+#burası şimdilik test amaçlı
 
 def main():
-    games_json = Path("/home/emir/Projeler/qt-project/data/games.json")
-    with open(games_json, "r") as file:
-        games_data = json.load(file)
+    games_data = config.load_games()
+    paths_data = config.load_paths()
+    systems_data = config.load_systems()
 
-    paths_json = Path("/home/emir/Projeler/qt-project/data/paths.json")
-    with open(paths_json, "r") as file:
-        paths_data = json.load(file)
-
-    systems_json = Path("/home/emir/Projeler/qt-project/data/systems.json")
-    with open(systems_json, "r") as file:
-        systems_data = json.load(file)
-
-    for system, games in games_data.items():
+    choices = []
+    for system_id, games in games_data.items():
         for game in games:
-            display_name = game.get("display_name") or game.get("rom_name")
-            platform = game.get("platform")
-            print(f"[{index}] {display_name} ({platform})")
+            choices.append((system_id, game))
 
+    if not choices:
+        print("games.json boş")
+        return
 
-    choice = input("\nindex seç: ")
-    index = int(choice)
+    for index, (system_id, game) in enumerate(choices):
+        display_name = game.get("display_name") or game.get("rom_name")
+        platform_name = game.get("platform")
+        print(f"[{index}] {display_name} ({platform_name})")
 
-    selected_game = games_data["gba"][index]
+    try:
+        index = int(input("\nindex seç:"))
+        system_id, selected_game = choices[index]
+    except Exception as e:
+        print(f"Geçersin seçim: {e}")
+
     rom_path = selected_game.get("path")
-    platform_name = selected_game.get("platform")
+    platform = selected_game.get("platform")
+    display_name = selected_game.get("display_name") or selected_game.get("rom_name")
 
     print(f"\noyun: {selected_game.get('game_display_name')}")
     print(f"platform: {platform_name}")
     print(f"dosya Yolu: {rom_path}")
 
     selected_system = None
-    for sys_key, sys_info in systems_data.items():
-        if sys_info.get("name").lower() == platform_name.lower():
-            selected_system = sys_info
+    for system_key, system_info in systems_data.items():
+        if system_info.get("name").lower() == platform_name.lower():
+            selected_system = system_info
             break
 
     if not selected_system:
+        print(f"{platform} bulunamadı")
         return
 
     core_dir = paths_data.get("cores_dir", "")
     core_path = selected_system.get("core").replace("{core_dir}", core_dir)
-
-    subprocess.Popen(["retroarch", "-L", core_path, rom_path])
+    if not core_path:
+        print("core bulunamadı")
+    
+    try:
+        subprocess.Popen(["retroarch", "-f", "-L", core_path, rom_path])
+    except Exception as e:
+        print("Hata: ", e)
 
 if __name__ == "__main__":
     main()
