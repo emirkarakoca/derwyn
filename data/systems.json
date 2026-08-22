@@ -1,0 +1,24 @@
+    {
+        "gba": {
+            "id": 16,
+            "name": "Game Boy Advance",
+            "description": "idk belki lazım olur",
+            "extensions": [".gba"],
+            "core": "mgba_libretro.so",
+            "assets": {
+                "icon": "icon yolu",
+                "background": "arkaplan yolu"
+            }
+        },
+        "psp": {
+            "id": 4,
+            "name": "PlayStation Portable",
+            "description": "idk belki lazım olur",
+            "extensions": [".cso", ".iso", ".pbp"],
+            "core": "yazcam",
+            "assets": {
+                "icon": "icon yolu",
+                "background": "arkaplan yolu"
+            }
+        }
+    }
