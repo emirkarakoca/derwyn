@@ -14,7 +14,6 @@ cache_path = var / "cache" / "games_cache.json"
 
 def load_paths():
     paths = load_json(paths_path)
-    print(paths_path)
     if "roms_dir" not in paths:
         raise SystemExit("paths.json eksik veya bozuk.")
     return paths
